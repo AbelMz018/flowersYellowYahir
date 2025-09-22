@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>I love u Heidi - Flores y Corazones</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+</head>
+<body>
+<script>
+let flores = [];
+let corazones = [];
+let frases = [
+  "Eres mi razón, mi fuerza y mi destino eterno. 💖",
+  "Cada latido de mi corazón te pertenece. ❤️",
+  "Contigo aprendí que el amor es infinito. 💫",
+  "Si fuera un suspiro, sería para ti siempre. 🌹",
+  "Mi vida es un sueño desde que te conocí. ✨",
+  "Eres la luz que ilumina mis días oscuros. 🌞",
+  "Si amar fuera un arte, tú serías mi obra maestra. 🎨",
+  "Sin ti, mi mundo no tendría color. 🌈",
+  "Eres mi locura favorita y no quiero curarme. 😍",
+  "Contigo aprendí que los milagros existen. ✨",
+  "Eres la canción que siempre quiero escuchar. 🎶",
+  "Cada segundo lejos de ti es una eternidad. ⏳",
+  "Si mi corazón hablara, solo diría tu nombre. 💓",
+  "Eres el sueño del que nunca quiero despertar. 🌙",
+  "Amarte es mi aventura favorita sin fin. 🌟"
+];
+let indiceFrase = 0;
+let tiempoCambio = 0;
+let alphaFrase = 0;
+let fadingIn = true;
+let horaActual;
+
+function setup() {
+  createCanvas(1000, 650);
+  textAlign(CENTER, CENTER);
+
+  for (let i = 0; i < 20; i++) {
+    flores.push(new Flor(random(50, width-50), random(100, height-200)));
+  }
+}
+
+function draw() {
+  horaActual = hour();
+
+  // Fondo según la hora
+  if (horaActual >= 6 && horaActual < 12) fondoMañana();
+  else if (horaActual >= 12 && horaActual < 17) fondoTarde();
+  else if (horaActual >= 17 && horaActual < 20) fondoAtardecer();
+  else fondoNoche();
+
+  dibujarNubes();
+
+  // Flores
+  for (let flor of flores) flor.mostrar();
+
+  // Generar corazones aleatorios
+  if (frameCount % 10 === 0) {
+    corazones.push(new Corazon(random(50, width-50), height-100));
+  }
+
+  // Corazones animados
+  for (let i = corazones.length-1; i >= 0; i--) {
+    corazones[i].mostrar();
+    corazones[i].actualizar();
+    if (corazones[i].alpha <= 0) {
+      corazones.splice(i, 1);
+    }
+  }
+
+  // Texto principal
+  fill(255);
+  textSize(50);
+  let yAnim = sin(frameCount*0.05)*10;
+  text("I love u Heidi de mi corazón", width/2, height-120+yAnim);
+
+  // Frase con fade in/out
+  textSize(28);
+  fill(255, 230, 240, alphaFrase);
+  let yAnim2 = cos(frameCount*0.03)*8;
+  text(frases[indiceFrase], width/2, height-70+yAnim2);
+
+  // Control de fade
+  if(fadingIn) alphaFrase += 4;
+  else alphaFrase -= 4;
+
+  if(alphaFrase >= 255){ fadingIn = false; alphaFrase = 255; }
+  if(alphaFrase <= 0){ 
+    fadingIn = true; 
+    alphaFrase = 0; 
+    indiceFrase = (indiceFrase+1)%frases.length;
+  }
+}
+
+// Fondos según hora
+function fondoMañana(){ for(let y=0;y<height;y++){ stroke(lerpColor(color(135,206,250), color(255,255,200), y/height)); line(0,y,width,y); } }
+function fondoTarde(){ for(let y=0;y<height;y++){ stroke(lerpColor(color(255,200,150), color(255,150,100), y/height)); line(0,y,width,y); } }
+function fondoAtardecer(){ for(let y=0;y<height;y++){ stroke(lerpColor(color(120,30,140), color(255,90,160), y/height)); line(0,y,width,y); } }
+function fondoNoche(){ for(let y=0;y<height;y++){ stroke(lerpColor(color(20,20,70), color(70,30,120), y/height)); line(0,y,width,y); } }
+
+// Clase Flor amarilla animada
+class Flor{
+  constructor(x,y){
+    this.baseX = x; this.baseY = y;
+    this.petalos = int(random(4,12));
+    this.radioPetalo = random(15,35);
+    this.colorCentro = color(random(200,255), random(100,200), random(0,80));
+    this.colorPetalo = color(random(220,255), random(220,255), random(50,150));
+    this.offsetX = random(1000);
+    this.offsetY = random(1000);
+  }
+  mostrar(){
+    let t = frameCount*0.02;
+    let cx = this.baseX + sin(t+this.offsetX)*10;
+    let cy = this.baseY + cos(t+this.offsetY)*10;
+    let anim = sin(t*2)*10;
+    fill(this.colorPetalo);
+    noStroke();
+    for(let i=0;i<this.petalos;i++){
+      let angle = TWO_PI*i/this.petalos;
+      let px = cx + cos(angle)*(20+anim);
+      let py = cy + sin(angle)*(20+anim);
+      ellipse(px, py, this.radioPetalo*2, this.radioPetalo*2);
+    }
+    fill(this.colorCentro);
+    ellipse(cx, cy, 40, 40);
+  }
+}
+
+// Clase Corazon
+class Corazon {
+  constructor(x, y){
+    this.x = x;
+    this.y = y;
+    this.alpha = 255;
+    this.size = random(15, 30);
+    this.speed = random(1, 2);
+    this.offsetX = random(-1,1);
+  }
+  actualizar(){
+    this.y -= this.speed;
+    this.x += this.offsetX;
+    this.alpha -= 2;
+  }
+  mostrar(){
+    noStroke();
+    fill(255, 100, 150, this.alpha);
+    push();
+    translate(this.x, this.y);
+    beginShape();
+    vertex(0, -this.size/2);
+    bezierVertex(-this.size/2, -this.size, -this.size, 0, 0, this.size/2);
+    bezierVertex(this.size, 0, this.size/2, -this.size, 0, -this.size/2);
+    endShape(CLOSE);
+    pop();
+  }
+}
+
+// Nubes flotando
+function dibujarNubes(){
+  noStroke();
+  fill(255,230);
+  for(let i=0;i<12;i++){
+    let x = (frameCount*0.3 + i*250)%(width+250)-250;
+    let y = 50 + i*25%200;
+    ellipse(x,y,120,60);
+    ellipse(x+50,y-20,120,60);
+    ellipse(x+100,y,120,60);
+  }
+}
+</script>
+</body>
+</html>
+
